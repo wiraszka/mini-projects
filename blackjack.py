@@ -1,18 +1,20 @@
 import random
 import os
-# print(help(random))
-line = "--------------------------------------------------------------------------------"
-deck = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
 
+# Create global variables for deck, user hand and dealer hand
+deck = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
+user_hand = []
+dealer_hand = []
+line = "--------------------------------------------------------------------------------"
+
+# Clear interface before game start
 def clear():
 	if os.name == 'nt':
 		os.system('CLS')
 	if os.name == 'posix':
 		os.system('clear')
 
-def win_counter():
-	return score
-
+# Calculates points after first card is dealt to user
 def score(user_hand):
 	points = 0
 	for card in user_hand:
@@ -24,11 +26,12 @@ def score(user_hand):
 	total_points = points
 	return total_points
 
-def hit_me(user_hand, user_points):
+# Deals random card from deck, then calculates total points of cards in hand
+def hit_me(user_hand = '', user_points = '', dealer_hand = '', dealer_points = ''):
 	points = 0
 	aces = 0
-	sum_user_points = []
-	for card in user_hand:
+	sum_points = []
+	for card in user_hand or dealer_hand:
 		if card == 'J': points = 10
 		elif card == 'Q': points = 10
 		elif card == 'K': points = 10
@@ -36,35 +39,16 @@ def hit_me(user_hand, user_points):
 			points = 11
 			aces = aces + 1
 		else: points = card
-		sum_user_points.append(points)
-# Add together points in users hand
+		sum_points.append(points)
+	# Sum up points in hand, taking aces into account
 	total_points = 0
-	for points in sum_user_points:
+	for points in sum_points:
 		total_points = total_points + points
 	if total_points > 21 and aces >= 1:
 		total_points = total_points - 10 * aces
 	return total_points
 
-def hit_dealer(dealer_hand, dealer_points):
-	points = 0
-	aces = 0
-	sum_dealer_points = []
-	for card in dealer_hand:
-		if card == 'J': points = 10
-		elif card == 'Q': points = 10
-		elif card == 'K': points = 10
-		elif card == 'A':
-			points = 11
-			aces = aces + 1
-		else: points = card
-		sum_dealer_points.append(points)
-	total_points = 0
-	for points in sum_dealer_points:
-		total_points = total_points + points
-	if total_points > 21 and aces >= 1:
-		total_points = total_points - 10 * aces
-	return total_points
-
+# Determines outcome after points are calculated
 def check_points(user_points):
 	if user_points < 21:
 		return user_points
@@ -74,11 +58,12 @@ def check_points(user_points):
 		went_over(user_points)
 	return user_points
 
+# Blackjack!
 def blackjack(total_points):
 	print("Blackjack!")
-	print()
 	return total_points
 
+# Compare user_points to dealer_points to determine final outcome and statement
 def end_game(user_points, dealer_points, dealer_hand):
 	final_tally = "The dealer's hand is:", dealer_hand, "for a total of", dealer_points, "points"
 	if user_points > 21:
@@ -101,42 +86,42 @@ def end_game(user_points, dealer_points, dealer_hand):
 	return user_points
 
 def game():
-	user_hand = list()
-	dealer_hand = list()
-	print(line)
-	print("Welcome to Adam's Blackjack game!")
-	print("You win by getting to 21 points without going over, or by beating the dealer's score.")
-	print(line)
+	# Start game
+	print(line,"\nWelcome to Adam's Blackjack game!")
+	print("You win by getting to 21 points without going over, or by beating the dealer's score.\n",line)
 	input("Press any key to continue: ")
-# Dealer deals themselves first card
+
+	# Deal face card to dealer then append to list (dealer_hand)
 	deal_card = random.choice(deck)
 	dealer_hand.append(deal_card)
 	dealer_points = score(dealer_hand)
-	print(line)
-	print("The dealer deals themselves a card and places it face up:", dealer_hand)
-# Dealer deals user first card
+	print(line,"\nThe dealer deals themselves a card and places it face up:", dealer_hand)
+
+	# Deal first card to user then append to list (user_hand)
 	deal_card = random.choice(deck)
 	user_hand.append(deal_card)
 	user_points = score(user_hand)
-	print("The dealer deals you the card:",user_hand)
-	print("You have:", user_points,"points")
+	print("The dealer deals you the card:",user_hand,"\nYou have:", user_points,"points")
 	print("What do you want to do?")
-# Check current score, then chose to hit or stay
+
+	# Check user's current points tally
 	while True:
 		if user_points == 21:
 			blackjack(user_points)
 			break
+		# If user busts, break loop and skip to endgame
 		elif user_points > 21:
 			break
+		# If points below 21, prompt user for choice to hit or stay
 		else:
 			choice = input("--- Press 'h' to HIT --- 's' to Stay --- 'q' to Exit Game: ---")
 			print(line)
+			# If user choice is to hit, deal new card and append to user_hand, then call hit_me function
 			if choice == 'h':
 				deal_card = random.choice(deck)
 				user_hand.append(deal_card)
 				user_points = hit_me(user_hand, user_points)
-				print("The dealer's face up card is:", dealer_hand)
-				print("Your hand is: ",user_hand)
+				print("The dealer's face up card is:", dealer_hand,"\nYour hand is: ",user_hand)
 				print("You have:",user_points,"points")
 			elif choice == 's':
 				print("Your final tally is:",user_points)
@@ -148,6 +133,7 @@ def game():
 			else:
 				print("Wrong key. Try again.")
 				continue
+	# Determine dealer decision based on user_points
 	while True:
 		if dealer_points >= 21:
 			break
@@ -156,12 +142,14 @@ def game():
 		elif dealer_points < user_points:
 			deal_card = random.choice(deck)
 			dealer_hand.append(deal_card)
-			dealer_points = hit_dealer(dealer_hand, dealer_points)
+			dealer_points = hit_me(dealer_hand, dealer_points)
 		else:
 			break
 
 	end_game(user_points, dealer_points, dealer_hand)
 
+	# Prompt user to play again
+	# If yes then clear and re-start game
 	print("Game over")
 	again = input("Press 's' to play again ")
 	if again == 's':
